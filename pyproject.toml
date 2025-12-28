@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "reddress"
-version = "0.2.0"
+version = "0.3.0"
 authors = [
     { name="Jayaharisai Tothala", email="jayaharisai1212@gmail.com" }
 ]
@@ -26,7 +26,14 @@ dependencies = [
     "rich>=13.0.0",
     "fastapi",
     "uvicorn",
-    "jinja2"
+    "jinja2",
+    "docker",
+    "chromadb>=0.4.0",              # ChromaDB vector store
+    "qdrant-client>=1.7.0",         # Qdrant vector store
+    "pymilvus>=2.3.0",              # Milvus vector store
+    "PyPDF2>=3.0.0",                # PDF parsing
+    "python-docx>=1.0.0",           # Word document parsing
+    "sentence-transformers>=2.2.0",  # Optional: local embeddings
 ]
 
 [project.optional-dependencies]

@@ -24,6 +24,10 @@ from .prompt_manager import (
     PromptManager
 )
 
+from .vector_manager import (
+    VectorStoreManager
+)
+
 
 __all__ = [
     "validate_openai_key",
@@ -42,5 +46,6 @@ __all__ = [
     "show_usage_stats",
     "interactive_create_prompt",
     "interactive_view_prompts",
-    "PromptManager"
+    "PromptManager",
+    "VectorStoreManager"
 ]
