@@ -452,26 +452,49 @@ class RAGEngine:
         project_data = self.db.get_project(project_name)
         
         if not project_data:
-            raise ValueError(f"Project '{project_name}' not found")
+            raise ValueError(f"Project '{project_name}' not found in database")
+        
+        # Debug info
+        console.print(f"[dim]Loading project: {project_name}[/dim]")
+        console.print(f"[dim]Vector store: {self.vector_store_type}[/dim]")
         
         if self.use_memory or project_data.get('vector_store') == 'memory':
             if project_name not in self.memory_store:
-                console.print(f"[yellow]⚠️  Project not in memory. Please re-index it.[/yellow]")
+                console.print(f"[yellow]⚠️  Project '{project_name}' not in memory[/yellow]")
+                console.print(f"[yellow]💡 Re-index with: reddress rag index {project_data.get('path', '.')} --name {project_name} --vector memory[/yellow]")
                 raise ValueError(f"Project '{project_name}' not in memory")
             else:
                 self.collection = project_name
                 console.print(f"[green]✅ Loaded project from memory: {project_name}[/green]")
         else:
             if self.vector_store_type == "chromadb":
-                self.collection = self.vector_store.get_collection(name=project_name)
+                try:
+                    # List available collections for debugging
+                    all_collections = self.vector_store.list_collections()
+                    collection_names = [c.name for c in all_collections]
+                    console.print(f"[dim]Available collections: {collection_names}[/dim]")
+                    
+                    if project_name not in collection_names:
+                        console.print(f"[red]❌ Collection '{project_name}' not found in ChromaDB[/red]")
+                        console.print(f"[yellow]💡 Re-index with: reddress rag update {project_name}[/yellow]")
+                        console.print(f"[yellow]💡 Or force re-index: reddress rag index {project_data.get('path', '.')} --name {project_name} --force[/yellow]")
+                        raise ValueError(f"Collection '{project_name}' does not exist in ChromaDB")
+                    
+                    self.collection = self.vector_store.get_collection(name=project_name)
+                    console.print(f"[green]✅ Loaded ChromaDB collection: {project_name}[/green]")
+                except Exception as e:
+                    console.print(f"[red]❌ Failed to load collection '{project_name}': {str(e)}[/red]")
+                    raise
+            
             elif self.vector_store_type == "qdrant":
                 self.collection = project_name
+                console.print(f"[green]✅ Loaded Qdrant collection: {project_name}[/green]")
+            
             elif self.vector_store_type == "milvus":
                 from pymilvus import Collection
                 self.collection = Collection(project_name)
                 self.collection.load()
-            
-            console.print(f"[green]✅ Loaded project: {project_name}[/green]")
+                console.print(f"[green]✅ Loaded Milvus collection: {project_name}[/green]")
     
     def search(self, query: str, top_k: int = 5) -> List[Dict]:
         """Search for relevant chunks"""
@@ -657,7 +680,15 @@ Please answer based on the context above."""
                 max_tokens=1000
             )
             
-            answer = response.choices[0].message.content
+            # Fixed: Proper response handling
+            if hasattr(response, 'choices') and len(response.choices) > 0:
+                choice = response.choices[0]
+                if hasattr(choice, 'message') and hasattr(choice.message, 'content'):
+                    answer = choice.message.content
+                else:
+                    answer = str(choice)
+            else:
+                answer = "Unable to generate response"
             
             return {
                 'answer': answer,
@@ -669,11 +700,13 @@ Please answer based on the context above."""
                     }
                     for r in results
                 ],
-                'tokens': response.usage.total_tokens,
-                'cost': self._calculate_llm_cost(model, response.usage.prompt_tokens, response.usage.completion_tokens)
+                'tokens': response.usage.total_tokens if hasattr(response, 'usage') else 0,
+                'cost': self._calculate_llm_cost(model, response.usage.prompt_tokens if hasattr(response, 'usage') else 0, response.usage.completion_tokens if hasattr(response, 'usage') else 0)
             }
         
         except Exception as e:
+            import traceback
+            traceback.print_exc()
             return {
                 'answer': f"Error: {str(e)}",
                 'sources': results
@@ -726,7 +759,8 @@ Please answer based on the context above."""
 Rules:
 - Only use information from the provided context
 - Be concise but complete
-- Include code snippets when relevant
+- Include code snippets when relevant (use ```
+- Use markdown formatting for better readability
 - If you're unsure, say so
 - Reference specific files when mentioning code"""
 
@@ -734,7 +768,7 @@ Rules:
 
 {context}
 
----
+***
 
 Question: {query}
 
@@ -750,7 +784,21 @@ Please answer based on the context above."""
                 max_tokens=1000
             )
             
-            answer = response.choices[0].message.content
+            # Fixed: Proper response handling
+            if hasattr(response, 'choices') and len(response.choices) > 0:
+                choice = response.choices[0]
+                if hasattr(choice, 'message') and hasattr(choice.message, 'content'):
+                    answer = choice.message.content
+                else:
+                    answer = str(choice)
+            else:
+                answer = "Unable to generate response"
+
+            try:
+                answer = response.choices[0].message.content
+            except (AttributeError, IndexError, TypeError) as e:
+                console.print(f"[red]Error extracting answer: {e}[/red]")
+                answer = "Unable to extract response content"
             
             return {
                 'answer': answer,
@@ -762,11 +810,13 @@ Please answer based on the context above."""
                     }
                     for r in results
                 ],
-                'tokens': response.usage.total_tokens,
-                'cost': self._calculate_llm_cost(model, response.usage.prompt_tokens, response.usage.completion_tokens)
+                'tokens': response.usage.total_tokens if hasattr(response, 'usage') else 0,
+                'cost': self._calculate_llm_cost(model, response.usage.prompt_tokens if hasattr(response, 'usage') else 0, response.usage.completion_tokens if hasattr(response, 'usage') else 0)
             }
         
         except Exception as e:
+            import traceback
+            traceback.print_exc()
             return {
                 'answer': f"Error: {str(e)}",
                 'sources': results
