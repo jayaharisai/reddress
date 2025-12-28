@@ -8,7 +8,7 @@ version = "0.1.0"
 authors = [
     { name="Jayaharisai Tothala", email="jayaharisai1212@gmail.com" }
 ]
-description = "A brief description of your package"
+description = "Reddress"
 readme = "README.md"
 requires-python = ">=3.9"
 classifiers = [
@@ -16,13 +16,16 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
+
 dependencies = [
-    "openai",
+    "openai>=1.0.0",
     "click>=8.0.0",
-    "toml",
-    "questionary",
-    "prompt-toolkit",
-    "rich>=13.0.0"
+    "toml>=0.10.0",
+    "questionary>=2.0.0",
+    "prompt-toolkit>=3.0.0",
+    "rich>=13.0.0",
+    "fastapi",
+    "uvicorn"
 ]
 
 [project.optional-dependencies]

@@ -14,8 +14,16 @@ from .helpers import (
     get_recent_usage,
     get_usage_stats,
     log_message_usage,
-    show_usage_stats
+    show_usage_stats,
+
 )
+
+from .prompt_manager import (
+    interactive_create_prompt,
+    interactive_view_prompts,
+    PromptManager
+)
+
 
 __all__ = [
     "validate_openai_key",
@@ -31,5 +39,8 @@ __all__ = [
     "get_recent_usage",
     "get_usage_stats",
     "log_message_usage",
-    "show_usage_stats"
+    "show_usage_stats",
+    "interactive_create_prompt",
+    "interactive_view_prompts",
+    "PromptManager"
 ]

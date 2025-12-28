@@ -310,3 +310,4 @@ def show_usage_stats(recent_count=10):
         )
     
     console.print()
+

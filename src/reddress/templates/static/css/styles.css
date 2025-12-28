@@ -1,0 +1,20 @@
+body{
+    margin: 0px;
+    padding: 0px;
+    font-family: "Podkova", serif;
+}
+
+.logo{
+    font-size: 24px;
+    font-weight: 400;
+}
+
+.description{
+    font-size: 14px;
+    font-weight: 200;
+    color: gray;
+}
+
+.main{
+    margin: 30px;
+}
